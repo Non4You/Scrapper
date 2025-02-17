@@ -77,6 +77,7 @@ class BasicActionBrowser {
             } catch (error) {
                 console.log("Listing manga error: ", error)
             }
+	    await this.wait(2000);
             retries--;
         } while (retries > 0 && allMangaSources.length === 0)
         if (allMangaSources.length === 0 && runCheck)
@@ -139,21 +140,30 @@ class BasicActionBrowser {
         return ([InfoSources, GenreSources, mangaChaptersSources]);
     }
 
-    async getNextMangasPage(pagination, ErrorCheck, retries = 3) {
+    async getNextMangasPage(pagination, ErrorCheck, url = "", retries = 3) {
         let attempts = retries; // Store the initial retry count
     
         while (attempts >= 0) {
             try {
                 let currentUrl = this.headLessBrowser.currentUrl();
                 // await this.wait(2000);
-                let res = await this.headLessBrowser.evaluateAndclickOnSelectorIf(
-                    pagination[0], pagination[1], pagination[2], "Next Page Error :"
-                );
+		let res;
+		if (url !== "") {
+		    await this.headLessBrowser.goToPage(url);
+		    res = "OK";
+		} else {
+                    res = await this.headLessBrowser.evaluateAndclickOnSelectorIf(
+			pagination[0], pagination[1], pagination[2], "Next Page Error :"
+                    );
+		}
+		console.log("res click next page : ", res);
+		//await this.headLessBrowser.waitNavig();
                 await this.wait(4000);
                 let newUrl = this.headLessBrowser.currentUrl();
                 console.log(`Attempt ${retries - attempts + 1}, res : `, { currentUrl, newUrl }, res);
                 if (currentUrl === newUrl) {
                     console.log(`Retrying... attempts left: ${attempts}`);
+		    await this.headLessBrowser.refresh();
                     if (attempts === 0) return "KO"; // Stop after last retry
                 } else if (res === "KO" && ErrorCheck) {
                     throw new Error("Error: Pagination not working properly");

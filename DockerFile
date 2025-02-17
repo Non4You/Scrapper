@@ -1,0 +1,38 @@
+# Use an official Node.js image
+FROM node:18-bookworm
+
+# Install dependencies including pixman-1 and other libraries required by canvas
+RUN apt-get update && apt-get install -y \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    pkg-config \
+    python3 \
+    build-essential \
+    curl \
+    chromium \
+    libpixman-1-dev \
+    libnode-dev
+
+# Set environment variables for pkg-config and Puppeteer
+ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/share/pkgconfig"
+ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY package.json package-lock.json ./
+
+RUN rm -rf node_modules && npm cache clean --force
+RUN npm install --unsafe-perm
+
+RUN npm rebuild canvas
+
+# Copy the rest of the app
+COPY . .
+
+# Run the Puppeteer script
+CMD ["node", "main.js"]

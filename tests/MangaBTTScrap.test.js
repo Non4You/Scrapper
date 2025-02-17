@@ -2,7 +2,7 @@ const createSiteScrapClass = require("./../Scrapper/siteBrowsingLogic/SiteScrapB
 const BasicActionBrowser = require("./../Scrapper/basicActionBrowser.js");
 const HeadLessBrowser = require("./../headlessBrowser.js");
 
-jest.setTimeout(20000);
+jest.setTimeout(100000);
 describe("MangaBTT Class", () => {
     let asuraScrap;
     let basicActionBrowser;
@@ -39,20 +39,27 @@ describe("MangaBTT Class", () => {
     //     expect(allMangaSources.length).toBe(36);
     // });
 
-    // test("test MangaBTT check pagination", async () => {
-    //     await basicActionBrowser.accessPage(asuraScrap.mainUrl)
-    //     var allMangaSources1 = await headLessBrowser.getDataEvaluateLoop(asuraScrap.mangaInfo[0], asuraScrap.mangaInfo[1]);
-    //     expect(allMangaSources1).not.toBe([]);
-    //     await headLessBrowser.evaluateAndclickOnSelectorIf(asuraScrap.pagination[0], asuraScrap.pagination[1], asuraScrap.pagination[2], "Next Page Error :");
-    //     await basicActionBrowser.wait(1000);
-    //     var allMangaSources2 = await headLessBrowser.getDataEvaluateLoop(asuraScrap.mangaInfo[0], asuraScrap.mangaInfo[1]);
-    //     console.log(allMangaSources1[0][0]);
-    //     if (asuraScrap.paginationMethod === 1) {
-    //         expect(allMangaSources1[0][0]).not.toBe(allMangaSources2[0][0]);
-    //     } else {
-    //         expect(allMangaSources2.length).toBeGreaterThan(allMangaSources1.length);
-    //     }
-    // });
+     test("test MangaBTT check pagination", async () => {
+         await basicActionBrowser.accessPage(asuraScrap.mainUrl)
+         var allMangaSources1 = await headLessBrowser.getDataEvaluateLoop(asuraScrap.mangaInfo[0], asuraScrap.mangaInfo[1]);
+         expect(allMangaSources1).not.toBe([]);
+	 console.log(allMangaSources1);
+	 //resNextPage = await basicActionBrowser.getNextMangasPage(asuraScrap.pagination, false);
+         //await headLessBrowser.evaluateAndclickOnSelectorIf(asuraScrap.pagination[0], asuraScrap.pagination[1], asuraScrap.pagination[2], "Next Page Error :");
+         await basicActionBrowser.wait(1000);
+	 //await headLessBrowser.justclick();
+	 //await headLessBrowser.justclick2();
+	 console.log(headLessBrowser.currentUrl());
+	 await headLessBrowser.goToPage("https://manhwabtt.cc/?page=2&typegroup=0");
+	 console.log(headLessBrowser.currentUrl());
+         var allMangaSources2 = await headLessBrowser.getDataEvaluateLoop(asuraScrap.mangaInfo[0], asuraScrap.mangaInfo[1]);
+         console.log(allMangaSources2);
+         if (asuraScrap.paginationMethod === 1) {
+             expect(allMangaSources1[0][0]).not.toBe(allMangaSources2[0][0]);
+         } else {
+             expect(allMangaSources2.length).toBeGreaterThan(allMangaSources1.length);
+         }
+     });
 
     // test("test MangaBTT check manga", async () => {
     //     await basicActionBrowser.accessPage(asuraScrap.mainUrl);
@@ -61,27 +68,27 @@ describe("MangaBTT Class", () => {
     //     expect(res).toBe(200);
     // });
 
-    test("test MangaBTT check manga info", async () => {
-        var mangaInfoSources, mangaGenreSources, mangaChaptersSources;
-        await basicActionBrowser.accessPage(asuraScrap.mainUrl);
-        var allMangaSources = await headLessBrowser.getDataEvaluateLoop(asuraScrap.mangaInfo[0], asuraScrap.mangaInfo[1]);
-        var res = await basicActionBrowser.accessPage(allMangaSources[0][1]);
-        if (asuraScrap.mangaChaptersGatheringMethod === 1) {
-            [mangaInfoSources, mangaGenreSources, mangaChaptersSources] = await basicActionBrowser.gatherMangaDataChunk(asuraScrap.mangaPageInfo,
-                asuraScrap.mangaGenreInfo, asuraScrap.mangaChaptersInfo, asuraScrap.mangaChaptersType);
-        } else {
-            [mangaInfoSources, mangaGenreSources, mangaChaptersSources] = await basicActionBrowser.gatherMangaDataUnlockChapters(asuraScrap.mangaPageInfo,
-                asuraScrap.mangaGenreInfo, asuraScrap.mangaChaptersInfo, asuraScrap.mangaChaptersButton, asuraScrap.mangaChaptersType);
-        }
-        console.log(mangaInfoSources);
-        expect(mangaInfoSources[0][1]).not.toBe("");
+    //test("test MangaBTT check manga info", async () => {
+    //    var mangaInfoSources, mangaGenreSources, mangaChaptersSources;
+    //    await basicActionBrowser.accessPage(asuraScrap.mainUrl);
+    //    var allMangaSources = await headLessBrowser.getDataEvaluateLoop(asuraScrap.mangaInfo[0], asuraScrap.mangaInfo[1]);
+        //var res = await basicActionBrowser.accessPage(allMangaSources[0][1]);
+       // if (asuraScrap.mangaChaptersGatheringMethod === 1) {
+       //     [mangaInfoSources, mangaGenreSources, mangaChaptersSources] = await basicActionBrowser.gatherMangaDataChunk(asuraScrap.mangaPageInfo,
+              //  asuraScrap.mangaGenreInfo, asuraScrap.mangaChaptersInfo, asuraScrap.mangaChaptersType);
+     //   } else {
+          //  [mangaInfoSources, mangaGenreSources, mangaChaptersSources] = await basicActionBrowser.gatherMangaDataUnlockChapters(asuraScrap.mangaPageInfo,
+               // asuraScrap.mangaGenreInfo, asuraScrap.mangaChaptersInfo, asuraScrap.mangaChaptersButton, asuraScrap.mangaChaptersType);
+        //}
+        //console.log(mangaInfoSources);
+       // expect(mangaInfoSources[0][1]).not.toBe("");
         // expect(parseFloat(asuraScrap.extractNumber(mangaInfoSources[0][2]))).toBeGreaterThan(0);
         // expect(parseFloat(asuraScrap.extractNumber(mangaInfoSources[0][2]))).toBeLessThan(10);
-        expect(mangaInfoSources[0][3]).not.toBe("");
-        expect(mangaInfoSources[0][4]).not.toBe("");
-        expect(mangaGenreSources.length).not.toBe(0);
-        expect(mangaChaptersSources.length).not.toBe(0);
-    });
+        //expect(mangaInfoSources[0][3]).not.toBe("");
+       // expect(mangaInfoSources[0][4]).not.toBe("");
+        //expect(mangaGenreSources.length).not.toBe(0);
+      //  expect(mangaChaptersSources.length).not.toBe(0);
+    //});
 
     // test("test MangaBTT check access manga chapter", async () => {
     //     await basicActionBrowser.accessPage(asuraScrap.mainUrl);

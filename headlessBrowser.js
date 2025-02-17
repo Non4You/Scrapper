@@ -14,9 +14,45 @@ class HeadLessBrowser {
 
     async launchBrowser() {
         const userDataDir = path.join(__dirname, "user_data");
-        this.browser = await puppeteer.launch({ headless: false, userDataDir: userDataDir })
+	//process.env.PUPPETEER_EXECUTABLE_PATH
+        this.browser = await puppeteer.launch({ headless: true, userDataDir: userDataDir, executablePath: "/usr/bin/chromium", args: [    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-software-rasterizer',
+    '--disable-extensions',
+    '--disable-gpu',
+    '--disable-background-timer-throttling',
+    '--disable-client-side-phishing-detection',
+    '--disable-sync',
+																	  '--disable-translate',
+																	  '--disable-3d-apis',
+																	  '--disable-remote-fonts',
+																	  '--disable-ipc-flooding-protection',
+																	  '--disable-backgrounding-occluded-windows',
+																	  '--disable-background-networking',
+																	  '--disable-renderer-backgrounding',
+																	  '--disable-default-apps',
+																	  '--no-first-run',
+																	  //'--blink-settings=imagesEnabled=false',
+    '--disk-cache-size=0'
+	], protocolTimeout: 180000 })
         const pages = await this.browser.pages();
         this.page = pages[pages.length - 1];
+	//await this.page.goto('https://google.com', { waitUntil: 'load' });
+	//await this.page.setRequestInterception(true);
+
+	//this.page.on('request', (req) => {
+	//    if (['image', 'stylesheet', 'font', 'media', 'websocket', 'eventsource'].includes(req.resourceType())) {
+	//	req.abort();
+	//    } else {
+	//	req.continue();
+	//    }
+	//});
+
+	//await this.page.evaluateOnNewDocument(() => {
+	//    Object.defineProperty(navigator, 'webdriver', { get: () => false });
+	//});
+
         await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
         await new Promise(resolve => setTimeout(resolve, 3000));
         // await this.page.setRequestInterception(true);
@@ -34,8 +70,29 @@ class HeadLessBrowser {
 
     async openAndGoTo(url) {
         this.page = await this.browser.newPage();
-        var res = await this.page.goto(url, { waitUntil: 'networkidle2'});
+        var res = await this.page.goto(url, { waitUntil: 'domcontentloaded'});
         return (res);
+    }
+
+    async justclick() {
+	await this.page.evaluate(() => {
+            document.querySelector('li.next > a')?.click()
+	});
+    }
+
+    async justclick2() {
+        await this.page.waitForSelector('li.next > a', { visible: true, timeout: 30000 });
+        await this.page.click('li.next > a');
+        await this.page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 });
+    }
+    
+    async waitNavig() {
+        try {
+            // Wait for navigation to complete
+            await this.page.waitForNavigation({ waitUntil: 'load' });
+        } catch (error) {
+            console.error('Error waiting for navigation:', error);
+        }
     }
 
     async closeCurrentPage() {
@@ -49,7 +106,7 @@ class HeadLessBrowser {
     
         while (attempts < maxRetries) {
             try {
-                const res = await this.page.goto(url, { waitUntil: 'networkidle2' });
+                const res = await this.page.goto(url, { waitUntil: 'domcontentloaded' });
                 return res; // Succès, retourner la réponse
             } catch (error) {
                 attempts++;
@@ -219,6 +276,7 @@ class HeadLessBrowser {
                 for (let i = 0; i < links.length; i++) {
                     if (links[i][attribute].includes(attributeValue)) {
                         links[i].click();
+			console.log("clicked", );
                         return ("OK");
                     }
                 }
@@ -254,8 +312,6 @@ class HeadLessBrowser {
     async closeBrowser() {
         await this.browser.close();
     }
-
-
 }
 
 module.exports = HeadLessBrowser;

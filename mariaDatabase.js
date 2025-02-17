@@ -3,10 +3,10 @@ const stringManager = require("./utils/StringManager");
 
 // Database configuration
 const dbConfig = {
-    host: 'localhost',        // Replace with your database host
+    host: '192.168.1.99',        // Replace with your database host
     user: 'root',    // Replace with your database username
-    password: 'Daboudu91009!',// Replace with your database password
-    database: 'importtest' // Replace with your database name
+    password: 'daboudu91009',// Replace with your database password
+    database: 'KuroNeko' // Replace with your database name
 };
 
 class MariaDatabase {

@@ -3,9 +3,12 @@ const AbstractSiteScrap = require("./AbstractSiteScrap.js");
 class MangaBTTScrap extends AbstractSiteScrap {
     constructor(configIndex) {
         super(configIndex);
+	this.urlPagination1 = "https://manhwabtt.cc/?page=";
+	this.currentPage = 2;
+	this.urlPagination2 = "&typegroup=0"; 
     }
 
-    async mangaScrap(siteId, runCheck, isFullscrapped, index) {
+    async mangaScrap(siteId, runCheck, isFullscrapped, index, totalRetries = 3) {
         var mangaInfoSources, mangaGenreSources, mangaChaptersSources;
         var nbMangaUpdated = 0;
     
@@ -39,12 +42,17 @@ class MangaBTTScrap extends AbstractSiteScrap {
                     break; // Move to the next manga
                 } catch (error) {
                     console.log(`Retry ${retries + 1}/3 - Error processing manga ${i}: ${error.message}`);
-                    i++;
+                    
                     if (error.message.includes('Error: Listing chapters')) {
                         retries++;
+			if (totalRetries === 0) throw new Error(error.message);
                         if (retries > 6) {
-                            throw new Error(`Max retries reached for manga ${i}: ${error.message}`);
-                        }
+			    i++;
+                            totalRetries -= 1;
+			    
+                        } else {
+			    await this.headLessBrowser.refresh();
+			}
                     } else {
                         throw new Error(error.message);
                     }
@@ -64,12 +72,14 @@ class MangaBTTScrap extends AbstractSiteScrap {
         var resNextPage;
         var runCheck = true;
 
-        // for (let i = 0; i < 86; i++) {
-        //     await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck);
+        // for (let i = 0; i < 29; i++) {
+         //    await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck, this.urlPagination1 + this.currentPage + this.urlPagination2);
+	  //   this.currentPage += 1;
         // }
         do {
             [mangaInfoSources, mangaGenreSources, isEnd] = await this.mangaScrap(siteId, runCheck, isFullscrapped, 0);
-            resNextPage = await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck);
+            resNextPage = await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck, this.urlPagination1 + this.currentPage + this.urlPagination2);
+	    this.currentPage += 1;
             console.log("check value res in case of error next page :", resNextPage);
             if (runCheck === true) {
                 this.mariaDatabase.saveStatusDataRetrieval(siteId, 
@@ -105,6 +115,7 @@ class MangaBTTScrap extends AbstractSiteScrap {
                 res = await this.mangaSiteScrapLoading(siteId, isFullscrapped);
             }
             await this.mariaDatabase.saveMangaOrder();
+	    this.currentPage = 2;
             return (true);
         } catch (error) {
             this.handleError(siteId, error);
