@@ -2,11 +2,18 @@ const mysql = require('mysql2/promise');
 const stringManager = require("./utils/StringManager");
 
 // Database configuration
+//const dbConfig = {
+   // host: '192.168.1.99',        // Replace with your database host
+    //user: 'root',    // Replace with your database username
+    //password: 'daboudu91009',// Replace with your database password
+  //  database: 'KuroNeko' // Replace with your database name
+//};
+
 const dbConfig = {
-    host: '192.168.1.99',        // Replace with your database host
-    user: 'root',    // Replace with your database username
-    password: 'daboudu91009',// Replace with your database password
-    database: 'KuroNeko' // Replace with your database name
+    host: process.env.DB_HOST,        // Replace with your database host
+    user: process.env.DB_USER,    // Replace with your database username
+    password: process.env.DB_PASSWORD,// Replace with your database password
+    database: process.env.DB_DATABASE // Replace with your database name
 };
 
 class MariaDatabase {
