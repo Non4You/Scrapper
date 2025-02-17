@@ -9,15 +9,15 @@ jobs:
   deploy:
     runs-on: self-hosted
     env:
-      DB_HOST: ${{ secrets.HOST }}
-      DB_USER: ${{ secrets.USER }}
-      DB_PASSWORD: ${{ secrets.PASSWORD }}
-      DB_DATABASE: ${{ secrets.DATABASE }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DATABASE: ${{ secrets.DB_DATABASE }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Print Environment Variables
         run: |
-          echo "DB_HOST=${HOST}"
-          echo "DB_USER=${USER}"
+          echo "DB_HOST=${DB_HOST}"
+          echo "DB_USER=${DB_USER}"
