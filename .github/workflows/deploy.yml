@@ -1,0 +1,16 @@
+name: DEPLOY KURONEKO SCRAPPER
+
+on:
+	push:
+		branches:
+			- main
+
+jobs:
+	deploy:
+		runs-on: self-hosted
+		steps:
+			- name: Checkout repository
+			  uses: action/checkout@v3
+
+			- name: Print Environment Variables
+			  run: env | grep DB_
