@@ -23,4 +23,4 @@ jobs:
           echo "DB_USER=${DB_USER}"
 
       - name: Debug Environment Variables
-        run: cd .. && docker-compose up -d
+        run: docker-compose -f /home/testuser/KuroNeko-composer/docker-compose.yml up -d
