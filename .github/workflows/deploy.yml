@@ -24,3 +24,8 @@ jobs:
 
       - name: Debug Environment Variables
         run: docker-compose -f /home/testuser/KuroNeko-composer/docker-compose.yml up -d --build scrapper
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
