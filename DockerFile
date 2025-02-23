@@ -1,6 +1,8 @@
 # Use an official Node.js image
 FROM node:18-bookworm
 
+RUN mkdir -p /app/user_data && chown -R www-data:www-data /app/user_data && chmod -R 775 /app/user_data
+
 # Install dependencies including pixman-1 and other libraries required by canvas
 RUN apt-get update && apt-get install -y \
     libcairo2-dev \

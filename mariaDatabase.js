@@ -35,6 +35,7 @@ class MariaDatabase {
     // Basic connection Operation
     async openConnection() {
         try {
+	    console.log(dbConfig);
             this.connection = await mysql.createConnection(dbConfig);
             console.log('Connected to the database');
         } catch (error) {
