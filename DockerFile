@@ -2,6 +2,7 @@
 FROM node:18-bookworm
 
 RUN mkdir -p /app/user_data && chown -R www-data:www-data /app/user_data && chmod -R 775 /app/user_data
+RUN rm -rf /app/Scrapper/user_data/Default/AutofillStrikeDatabase/LOG || true
 
 # Install dependencies including pixman-1 and other libraries required by canvas
 RUN apt-get update && apt-get install -y \

@@ -16,6 +16,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        
+      
+      - name: Ensure the repository is up to date
+        run: |
+          cd /home/testuser/KuroNeko-composer
+          git reset --hard  # Ensure a clean state
+          git pull origin main
+
       - name: Run Docker Compose for Scrapper
         run: docker-compose -f /home/testuser/KuroNeko-composer/docker-compose.yml up -d --build scrapper
