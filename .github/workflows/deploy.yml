@@ -26,7 +26,7 @@ jobs:
       - name: Clean up old files
         run: |
           cd /home/testuser/KuroNeko-composer/Scrapper
-          rm -rf core user_data/SingletonLock user_data/SingletonSocket
+          sudo rm -rf core user_data/SingletonLock user_data/SingletonSocket
 
       - name: Run Docker Compose for Scrapper
         run: docker-compose -f /home/testuser/KuroNeko-composer/docker-compose.yml up -d --build scrapper
