@@ -311,13 +311,8 @@ class MariaDatabase {
 
     // chapters images retrieval functions
     async getChapterToScrap(siteId) {
-        // var selectQ = "SELECT m.Nom, mc.id, mc.url, mc.scrapped FROM manga m " +
-        //     "INNER JOIN manga_chapter mc ON m.id = mc.manga_Key " +
-        //     "WHERE m.FromSite = ? AND mc.scrapped = 1";
-        var selectQ = "SELECT mc.id, mc.url, mc.name, mc.scrapped " +
-            "FROM manga m " +
-            "INNER JOIN manga_chapter mc ON mc.manga_id = m.id AND mc.scrapped != 1 " +
-            "WHERE m.site_id = ? AND m.to_scrap = 1";
+        var selectQ = "SELECT mc.id, mc.url, mc.name, mc.scrapped FROM manga m " +
+            "INNER JOIN manga_chapter mc ON mc.manga_id = m.id AND mc.scrapped != 1 WHERE m.site_id = ? AND m.to_scrap = 1";
         const [results, ] = await this.connection.query(selectQ, [siteId]);
         return (results);
     }

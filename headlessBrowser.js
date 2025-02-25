@@ -148,8 +148,8 @@ class HeadLessBrowser {
 
     async scrollPage() {
         await this.page.evaluate(async () => {
-            const scrollStep = 1500; // Nombre de pixels par étape
-            const delay = 500;      // Délai entre chaque étape en millisecondes
+            const scrollStep = 1000; // Nombre de pixels par étape
+            const delay = 1500;      // Délai entre chaque étape en millisecondes
     
             // Fonction pour attendre un délai donné
             function wait(ms) {
