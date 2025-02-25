@@ -26,6 +26,9 @@ jobs:
       - name: Clean up old files
         run: |
           cd /home/testuser/KuroNeko-composer/Scrapper
+          whoami  # Debug: Check which user runs this command
+          ls -lah user_data  # Debug: See ownership of files
+          chown -R $(id -u):$(id -g) user_data/ || true  
           sudo rm -rf core user_data/SingletonLock user_data/SingletonSocket
 
       - name: Run Docker Compose for Scrapper
