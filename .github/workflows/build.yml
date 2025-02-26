@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   deploy:
-    runs-on: [self-hosted, Linux, ARM64]
+    runs-on: [self-hosted]
     env:
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_USER: ${{ secrets.DB_USER }}
