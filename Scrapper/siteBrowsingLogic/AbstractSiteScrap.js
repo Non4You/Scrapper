@@ -207,7 +207,7 @@ class AbstractSiteScrap {
                         var urls = await this.basicActionBrowser.scrappedChaptersImages(chapters[i], this.imagesChapter, this.scrollImagesChapter, this.imagesChapterType);
                         var images = [];
                         for (let y = 0; y < urls.length; y++) {
-                            images.push(await this.reduceImageQualityAndSave(urls[y], siteId+"/"+i+'.jpg', 50));
+                            images.push(await this.reduceImageQualityAndSave(urls[y], siteId+"/"+i+'.jpg', 75));
                         }
                         await this.mariaDatabase.saveChapterImage(chapters[i].id, images);
                         await this.mariaDatabase.setChapterToScrapped(chapters[i].id);
