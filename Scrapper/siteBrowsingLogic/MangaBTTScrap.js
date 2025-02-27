@@ -33,7 +33,7 @@ class MangaBTTScrap extends AbstractSiteScrap {
                     }
                     mangaInfoSources[0][2] = 5;
                     mangaInfoSources[0][4] = await this.reduceImageQualityAndSave(mangaInfoSources[0][4], "");
-    
+                    console.log("error unidentified status",mangaInfoSources[0]);
                     var [added, updated] = await this.mariaDatabase.saveAllData(
                         siteId, [allMangaSources[i][1], ...mangaInfoSources[0]],
                         mangaGenreSources, (this.mangaChaptersOrder === 1) ? mangaChaptersSources.reverse() : mangaChaptersSources
@@ -41,18 +41,16 @@ class MangaBTTScrap extends AbstractSiteScrap {
                     retries = 0;
                     break; // Move to the next manga
                 } catch (error) {
-                    console.log(`Retry ${retries + 1}/3 - Error processing manga ${i}: ${error.message}`);
-                    
+                    console.log(`Retry ${retries + 1}/3 - Error processing manga ${i}: ${error}`);
                     if (error.message.includes('Error: Listing chapters')) {
                         retries++;
-			if (totalRetries === 0) throw new Error(error.message);
+			            if (totalRetries === 0) throw new Error(error.message);
                         if (retries > 6) {
-			    i++;
+			                i++;
                             totalRetries -= 1;
-			    
-                        } else {
-			    await this.headLessBrowser.refresh();
-			}
+			            } else {
+		                    await this.headLessBrowser.refresh();
+		                }
                     } else {
                         throw new Error(error.message);
                     }
@@ -79,7 +77,7 @@ class MangaBTTScrap extends AbstractSiteScrap {
         do {
             [mangaInfoSources, mangaGenreSources, isEnd] = await this.mangaScrap(siteId, runCheck, isFullscrapped, 0);
             resNextPage = await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck, this.urlPagination1 + this.currentPage + this.urlPagination2);
-	    this.currentPage += 1;
+	        this.currentPage += 1;
             console.log("check value res in case of error next page :", resNextPage);
             if (runCheck === true) {
                 this.mariaDatabase.saveStatusDataRetrieval(siteId, 
