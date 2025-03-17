@@ -188,17 +188,18 @@ class AbstractSiteScrap {
         // await this.basicActionBrowser.checkIcon(siteId, this.siteIcon);
     }
 
-    async launch(siteId) {
+    async launch(siteId, mode) {
         var isFullscrapped = await this.mariaDatabase.getIsFullscrapped(siteId);
         console.log("Is Fullscrapped = ", isFullscrapped);
         try {
-            if (isFullscrapped === 0) {
-                var isOk = await this.accessMainPage(siteId, false);
-                if (isOk) await this.mariaDatabase.setFullScrappedOnMangaSite(siteId);
-            } else if (isFullscrapped === 1) {
-                await this.accessMainPage(siteId, true);
-            }
-            console.log("test: ", this.scrollImagesChapter);
+            if (mode === undefined) {
+                if (isFullscrapped === 0) {
+                    var isOk = await this.accessMainPage(siteId, false);
+                    if (isOk) await this.mariaDatabase.setFullScrappedOnMangaSite(siteId);
+                } else if (isFullscrapped === 1) {
+                    await this.accessMainPage(siteId, true);
+                }
+            }            
             var chapters = await this.mariaDatabase.getChapterToScrap(siteId);
             if (chapters.length != 0) {
                 console.log("chapters to Scrap: ", chapters, chapters[0].scrapped, chapters[0].scrapped === 1);
@@ -209,6 +210,10 @@ class AbstractSiteScrap {
                         for (let y = 0; y < urls.length; y++) {
                             images.push(await this.reduceImageQualityAndSave(urls[y], siteId+"/"+i+'.jpg', 75));
                         }
+                        if (images.length === 0) {
+                            console.log("current chapter: ", chapters[i]);
+                            throw new Error("No images scrapped");
+                        } 
                         await this.mariaDatabase.saveChapterImage(chapters[i].id, images);
                         await this.mariaDatabase.setChapterToScrapped(chapters[i].id);
                     } catch (error) {

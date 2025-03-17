@@ -22,7 +22,8 @@ class MainLogicScrapper {
         await this.mariaDatabase.insertMangaSite(config);     
     }
 
-    async ScrapAll() {
+    async ScrapAll(mode) {
+        console.log(mode);
         var scrapInstance;
         await this.initiate();
         const data = await this.mariaDatabase.getMangaSiteData();
@@ -33,12 +34,12 @@ class MainLogicScrapper {
                 if (data[y].Nom === this.interpreter.getNbSiteNameConfig(i)) {
                     scrapInstance = createSiteScrapClass(data[y].Nom, i);
                     if (scrapInstance != null)
-                        this.scrapperScheduler.registerScrapper(data[y].Nom, scrapInstance, data[y].id);
+                        this.scrapperScheduler.registerScrapper(data[y].Nom, scrapInstance, data[y].id, mode);
                         // await scrapInstance.launch(data[y].fullScrapped, data[y].id);
                 }
             }
         }
-        await this.scrapperScheduler.runScrapper(1800000);
+        await this.scrapperScheduler.runScrapper((mode !== undefined)?60000:1800000);
     }
 }
 

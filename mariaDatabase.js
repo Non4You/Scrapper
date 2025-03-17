@@ -10,10 +10,10 @@ const stringManager = require("./utils/StringManager");
 //};
 
 const dbConfig = {
-    host: process.env.DB_HOST,        // Replace with your database host
-    user: process.env.DB_USER,    // Replace with your database username
-    password: process.env.DB_PASSWORD,// Replace with your database password
-    database: process.env.DB_DATABASE // Replace with your database name
+    host: process.env.DB_HOST || '192.168.1.99',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'daboudu91009',
+    database: process.env.DB_DATABASE || 'KuroNeko'
 };
 
 class MariaDatabase {
@@ -173,6 +173,7 @@ class MariaDatabase {
         var insertQ = 'INSERT INTO manga_info (manga_id,synopsis,notation,status) VALUES (?,?,?,?);';
         var updateQ = 'UPDATE manga_info SET status = ?, synopsis = ?, notation=? WHERE id = ?;';
         const [results, ] = await this.connection.query(selectQ, [mangaId]);
+        console.log("undefined error test: ", mangaId, synopsis, notation, status);
         // console.log("result: ",results)
         if (results.length === 0) {
             const [res, ] = await this.connection.query(insertQ, [mangaId, synopsis, notation, status]);

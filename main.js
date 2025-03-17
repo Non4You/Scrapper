@@ -4,6 +4,7 @@ puppeteer.use(StealthPlugin());
 const MainLogicScrapper = require('./Scrapper/MainLogicScrapper.js');
 
 (async () => {
+    console.log(process.argv, process.argv.slice(2));
     const mainLogicScrapper = new MainLogicScrapper();
-    await mainLogicScrapper.ScrapAll();
+    await mainLogicScrapper.ScrapAll(process.argv.slice(2)[0]);
 })();

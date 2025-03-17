@@ -15,27 +15,30 @@ class HeadLessBrowser {
     async launchBrowser() {
         const userDataDir = path.join(__dirname, "user_data");
 	//process.env.PUPPETEER_EXECUTABLE_PATH
-        this.browser = await puppeteer.launch({ headless: true, userDataDir: userDataDir, executablePath: "/usr/bin/chromium", args: [    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-software-rasterizer',
-    '--disable-extensions',
-    '--disable-gpu',
-    '--disable-background-timer-throttling',
-    '--disable-client-side-phishing-detection',
-    '--disable-sync',
-																	  '--disable-translate',
-																	  '--disable-3d-apis',
-																	  '--disable-remote-fonts',
-																	  '--disable-ipc-flooding-protection',
-																	  '--disable-backgrounding-occluded-windows',
-																	  '--disable-background-networking',
-																	  '--disable-renderer-backgrounding',
-																	  '--disable-default-apps',
-																	  '--no-first-run',
-																	  //'--blink-settings=imagesEnabled=false',
-    '--disk-cache-size=0'
-	], protocolTimeout: 180000 })
+        this.browser = await puppeteer.launch({ headless: true, userDataDir: userDataDir, 
+            // executablePath: "/usr/bin/chromium", 
+            args: [    
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-software-rasterizer',
+            '--disable-extensions',
+            '--disable-gpu',
+            '--disable-background-timer-throttling',
+            '--disable-client-side-phishing-detection',
+            '--disable-sync',
+			'--disable-translate',
+			'--disable-3d-apis',
+			'--disable-remote-fonts',
+			'--disable-ipc-flooding-protection',
+			'--disable-backgrounding-occluded-windows',
+			'--disable-background-networking',
+			'--disable-renderer-backgrounding',
+			'--disable-default-apps',
+			'--no-first-run',
+			//'--blink-settings=imagesEnabled=false',
+            '--disk-cache-size=0'
+            ], protocolTimeout: 180000 })
         const pages = await this.browser.pages();
         this.page = pages[pages.length - 1];
 	//await this.page.goto('https://google.com', { waitUntil: 'load' });

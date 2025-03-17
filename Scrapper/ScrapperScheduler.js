@@ -39,8 +39,8 @@ class ScrapperScheduler {
         }
     }
 
-    registerScrapper(name, scrapper, id) {
-        this.scrapTask.push([name, scrapper, id]);
+    registerScrapper(name, scrapper, id, mode) {
+        this.scrapTask.push([name, scrapper, id, mode]);
     }
 
     async runScrapper(interval) {
@@ -48,10 +48,10 @@ class ScrapperScheduler {
         await this.headLessBrowser.launchBrowser();
         console.log(`Starting scrap at ${new Date().toLocaleTimeString()}`);
         for (let i = 0; i < this.scrapTask.length; i++) {
-            const [name, scrapper, id] = this.scrapTask[i];
+            const [name, scrapper, id, mode] = this.scrapTask[i];
             try {
                 console.log(`Starting ${name} at ${new Date().toLocaleTimeString()}`);
-                await scrapper["launch"](id);
+                await scrapper["launch"](id, mode);
                 console.log(`Completed ${name} at ${new Date().toLocaleTimeString()}`);
             } catch (error) {
                 console.error(`Error in ${name}:`, error);
