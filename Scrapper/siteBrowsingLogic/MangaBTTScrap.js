@@ -70,10 +70,10 @@ class MangaBTTScrap extends AbstractSiteScrap {
         var resNextPage;
         var runCheck = true;
 
-        for (let i = 0; i < 1; i++) {
-            await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck, this.urlPagination1 + this.currentPage + this.urlPagination2);
-	        this.currentPage += 1;
-        }
+        // for (let i = 0; i < 1; i++) {
+        //     await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck, this.urlPagination1 + this.currentPage + this.urlPagination2);
+	    //     this.currentPage += 1;
+        // }
         do {
             [mangaInfoSources, mangaGenreSources, isEnd] = await this.mangaScrap(siteId, runCheck, isFullscrapped, 0);
             resNextPage = await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck, this.urlPagination1 + this.currentPage + this.urlPagination2);
