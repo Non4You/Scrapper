@@ -113,7 +113,6 @@ class BasicActionBrowser {
         var GenreSources = null;
         var ChaptersSources;
         var InfoSources = await this.headLessBrowser.getDataEvaluateLoop(mangaPageInfo[0], mangaPageInfo[1]);
-
         InfoSources = this.checkInfoSources(InfoSources);
         if (mangaGenreInfo !== null)
             GenreSources = await this.headLessBrowser.evaluateAndGetAllValuesOnSelector(mangaGenreInfo[0], mangaGenreInfo[1]);
@@ -128,7 +127,6 @@ class BasicActionBrowser {
         var mangaChaptersSources = [];
         var GenreSources = null;
         var InfoSources = await this.headLessBrowser.getDataEvaluateLoop(mangaPageInfo[0], mangaPageInfo[1]);
-
         InfoSources = this.checkInfoSources(InfoSources);
         if (mangaGenreInfo !== null)
             GenreSources = await this.headLessBrowser.evaluateAndGetAllValuesOnSelector(mangaGenreInfo[0], mangaGenreInfo[1]);
