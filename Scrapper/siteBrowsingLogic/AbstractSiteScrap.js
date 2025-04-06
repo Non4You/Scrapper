@@ -79,7 +79,7 @@ class AbstractSiteScrap {
             }
             await this.headLessBrowser.goBack();
             nbMangaUpdated = this.update(added, updated, nbMangaUpdated);
-            if (isFullscrapped && nbMangaUpdated === 3)
+            if (isFullscrapped && nbMangaUpdated === 4)
                 return ([mangaInfoSources, mangaGenreSources, true]);
         }
         return ([mangaInfoSources, mangaGenreSources, false]);
@@ -199,28 +199,29 @@ class AbstractSiteScrap {
                 } else if (isFullscrapped === 1) {
                     await this.accessMainPage(siteId, true);
                 }
-            }            
-            var chapters = await this.mariaDatabase.getChapterToScrap(siteId);
-            if (chapters.length != 0) {
-                console.log("chapters to Scrap: ", chapters, chapters[0].scrapped, chapters[0].scrapped === 1);
-                for (let i = 0; i < chapters.length; i++) {
-                    try {
-                        var urls = await this.basicActionBrowser.scrappedChaptersImages(chapters[i], this.imagesChapter, this.scrollImagesChapter, this.imagesChapterType);
-                        var images = [];
-                        for (let y = 0; y < urls.length; y++) {
-                            images.push(await this.reduceImageQualityAndSave(urls[y], siteId+"/"+i+'.jpg', 75));
+            } else {          
+                var chapters = await this.mariaDatabase.getChapterToScrap(siteId);
+                if (chapters.length != 0) {
+                    console.log("chapters to Scrap: ", chapters, chapters[0].scrapped, chapters[0].scrapped === 1);
+                    for (let i = 0; i < chapters.length; i++) {
+                        try {
+                            var urls = await this.basicActionBrowser.scrappedChaptersImages(chapters[i], this.imagesChapter, this.scrollImagesChapter, this.imagesChapterType);
+                            var images = [];
+                            for (let y = 0; y < urls.length; y++) {
+                                images.push(await this.reduceImageQualityAndSave(urls[y], siteId+"/"+i+'.jpg', 75));
+                            }
+                            if (images.length === 0) {
+                                console.log("current chapter: ", chapters[i]);
+                                throw new Error("No images scrapped");
+                            } 
+                            await this.mariaDatabase.saveChapterImage(chapters[i].id, images);
+                            await this.mariaDatabase.setChapterToScrapped(chapters[i].id);
+                        } catch (error) {
+                            console.log("Error : couldn't download chapter, ", error);
                         }
-                        if (images.length === 0) {
-                            console.log("current chapter: ", chapters[i]);
-                            throw new Error("No images scrapped");
-                        } 
-                        await this.mariaDatabase.saveChapterImage(chapters[i].id, images);
-                        await this.mariaDatabase.setChapterToScrapped(chapters[i].id);
-                    } catch (error) {
-                        console.log("Error : couldn't download chapter, ", error);
                     }
                 }
-            }
+            }    
         } catch (error) {
             console.log("error launch: ", error)
             return (false);
