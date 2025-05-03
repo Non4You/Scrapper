@@ -86,7 +86,7 @@ class BasicActionBrowser {
     }
 
     checkInfoSources(infoSources) {
-        if (infoSources[0][3] === null) {
+        if (infoSources && infoSources[0] && infoSources[0][3] === null) {
             infoSources[0][3] = "Ongoing";
         }
         return (infoSources);

@@ -2,12 +2,12 @@ const mysql = require('mysql2/promise');
 const stringManager = require("./utils/StringManager");
 
 // Database configuration
-//const dbConfig = {
-   // host: '192.168.1.99',        // Replace with your database host
-    //user: 'root',    // Replace with your database username
-    //password: 'daboudu91009',// Replace with your database password
-  //  database: 'KuroNeko' // Replace with your database name
-//};
+// const dbConfig = {
+//     host: 'localhost',
+//     user: 'root',
+//     password: 'Daboudu91009!',
+//     database: 'importtest'
+// };
 
 const dbConfig = {
     host: process.env.DB_HOST || '192.168.1.99',
@@ -17,7 +17,6 @@ const dbConfig = {
 };
 
 class MariaDatabase {
-    // Singleton
     constructor() {
         if (MariaDatabase.instance) {
             return MariaDatabase.instance;
@@ -173,7 +172,7 @@ class MariaDatabase {
         var insertQ = 'INSERT INTO manga_info (manga_id,synopsis,notation,status) VALUES (?,?,?,?);';
         var updateQ = 'UPDATE manga_info SET status = ?, synopsis = ?, notation=? WHERE id = ?;';
         const [results, ] = await this.connection.query(selectQ, [mangaId]);
-        console.log("undefined error test: ", mangaId, synopsis, notation, status);
+        // console.log("undefined error test: ", mangaId, synopsis, notation, status);
         // console.log("result: ",results)
         if (results.length === 0) {
             const [res, ] = await this.connection.query(insertQ, [mangaId, synopsis, notation, status]);
@@ -405,8 +404,10 @@ class MariaDatabase {
             "INNER JOIN manga_info mi ON mi.manga_id = mrl.manga_id " +
             "WHERE mr.nom = ? GROUP BY mi.`status` ORDER BY count_status DESC LIMIT 1";
         var statusR = await this.connection.query(sq, [mangaName]);
-        var uq = "UPDATE manga_ref mr SET mr.`status` = ? WHERE mr.nom = ?;";
-        await this.connection.query(uq, [statusR[0][0].status, mangaName]);
+        if (statusR) {
+            var uq = "UPDATE manga_ref mr SET mr.`status` = ? WHERE mr.nom = ?;";
+            await this.connection.query(uq, [statusR[0][0].status, mangaName]);
+        }
     }
 
     async updateNoteMangaRef(mangaName, note) {

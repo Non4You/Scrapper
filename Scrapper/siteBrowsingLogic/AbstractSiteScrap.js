@@ -72,7 +72,7 @@ class AbstractSiteScrap {
                     mangaGenreSources, (this.mangaChaptersOrder === 1)?mangaChaptersSources.reverse():mangaChaptersSources);
                 retries = 0;
             } catch (error) {
-                console.log("retries ", retries, " message :", error.message);
+                console.log("retries ", retries, " message :", error);
                 if (error.message.includes('Error: Listing chapters') && retries === 3) throw Error(error.message);
                 else if (error.message.includes('Error: Listing chapters')) retries++;
                 else throw Error(error.message);
@@ -145,11 +145,7 @@ class AbstractSiteScrap {
         var res;
         try {
             await this.basicActionBrowser.accessPage(this.mainUrl);
-            // var icon = await this.reduceImageQualityAndSave(new URL(this.mainUrl).origin+'/favicon.ico', "ico");
-            // console.log("icon data: ",icon);
-            // await this.mariaDatabase.saveIconFromSite(siteId, icon);
             await this.saveIcon(siteId);
-            // await this.basicActionBrowser.checkIcon(siteId, this.siteIcon);
             if (this.paginationMethod === 1) {
                 res = await this.mangaSiteScrapPaging(siteId, isFullscrapped); 
             } else {
@@ -163,29 +159,46 @@ class AbstractSiteScrap {
         }
     }
 
-    async reduceImageQualityAndSave(imageUrl, type, quality = 80) {
+    async reduceImageQualityAndSave(imageUrl, type, errOnbuffer = true, quality = 80) {
         try {
-            // console.log("image url: ", imageUrl);
+            console.log("9");
             const response = await fetch(imageUrl);
+            if (errOnbuffer === false && (response === undefined || response === null))
+                return ("");
             if (!response.ok) throw new Error(`Failed to fetch image. Status: ${response.status}`);
             if (type === 'ico') {
                 return (response.buffer());
             } else {
-                const imageBuffer = await sharp(await response.buffer())
+                // console.log("1");
+                console.log("8", response);
+                const responseBuffer = await response.buffer();
+                console.log("7", responseBuffer);
+                const buffer = await Promise.race([
+                    responseBuffer,
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error("BUFFER_TIMEOUT")), 5000)
+                    )
+                ]);            
+                // console.log("2");
+                const imageBuffer = await sharp(buffer)
                     .jpeg({ quality })
                     .toBuffer();
+                // console.log("3");
                 return (imageBuffer);
             }
         } catch (error) {
-            console.error('Error processing the image:', error);
+            console.log("error message is:", err.message);
+            if (err.message === "BUFFER_TIMEOUT") {
+                console.warn("Buffer timed out.");
+                return ""; // retourne une chaîne vide seulement si le buffer a expiré
+            }
         }
+        console.log("6");
     }
 
     async saveIcon(siteId) {
         var icon = await this.reduceImageQualityAndSave(new URL(this.mainUrl).origin+'/favicon.ico', "ico");
-        // console.log("icon data: ",icon);
         await this.mariaDatabase.saveIconFromSite(siteId, icon);
-        // await this.basicActionBrowser.checkIcon(siteId, this.siteIcon);
     }
 
     async launch(siteId, mode) {
@@ -208,7 +221,8 @@ class AbstractSiteScrap {
                             var urls = await this.basicActionBrowser.scrappedChaptersImages(chapters[i], this.imagesChapter, this.scrollImagesChapter, this.imagesChapterType);
                             var images = [];
                             for (let y = 0; y < urls.length; y++) {
-                                images.push(await this.reduceImageQualityAndSave(urls[y], siteId+"/"+i+'.jpg', 75));
+                                images.push(await this.reduceImageQualityAndSave(urls[y], siteId+"/"+i+'.jpg', true, 75));
+                                console.log(y, urls[y]);
                             }
                             if (images.length === 0) {
                                 console.log("current chapter: ", chapters[i]);

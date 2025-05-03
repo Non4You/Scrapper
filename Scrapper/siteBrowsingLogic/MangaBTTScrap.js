@@ -32,14 +32,16 @@ class MangaBTTScrap extends AbstractSiteScrap {
                             );
                     }
                     mangaInfoSources[0][2] = 5;
-                    mangaInfoSources[0][4] = await this.reduceImageQualityAndSave(mangaInfoSources[0][4], "");
-                    console.log("error unidentified status",mangaInfoSources[0]);
+                    console.log("1");
+                    mangaInfoSources[0][4] = await this.reduceImageQualityAndSave(mangaInfoSources[0][4], "", false);
+                    console.log("2:", mangaInfoSources[0][4]);
                     var [added, updated] = await this.mariaDatabase.saveAllData(
                         siteId, [allMangaSources[i][1], ...mangaInfoSources[0]],
                         mangaGenreSources, (this.mangaChaptersOrder === 1) ? mangaChaptersSources.reverse() : mangaChaptersSources
                     );
+                    console.log("3");
                     retries = 0;
-                    break; // Move to the next manga
+                    break;
                 } catch (error) {
                     console.log(`Retry ${retries + 1}/3 - Error processing manga ${i}: ${error}`);
                     if (error.message.includes('Error: Listing chapters')) {
@@ -75,7 +77,7 @@ class MangaBTTScrap extends AbstractSiteScrap {
 	    //     this.currentPage += 1;
         // }
         do {
-            [mangaInfoSources, mangaGenreSources, isEnd] = await this.mangaScrap(siteId, runCheck, isFullscrapped, 0);
+            [mangaInfoSources, mangaGenreSources, isEnd] = await this.mangaScrap(siteId, runCheck, isFullscrapped, 0); //
             resNextPage = await this.basicActionBrowser.getNextMangasPage(this.pagination, runCheck, this.urlPagination1 + this.currentPage + this.urlPagination2);
 	        this.currentPage += 1;
             console.log("check value res in case of error next page :", resNextPage);
