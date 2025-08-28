@@ -2,6 +2,8 @@ const AsuraScrap = require("./AsuraScrap.js");
 const ReaperScrap = require("./ReaperScrap.js");
 const ThlScrap = require("./ThlScrap.js");
 const MangaBTT = require("./MangaBTTScrap.js");
+const MangaKaLotScrap = require("./MangaKaLotScrap.js");
+const MangaDex = require("./MangaDexScrap.js");
 
 function createSiteScrapClass(className, configIndex) {
     var ChildClass;
@@ -17,6 +19,12 @@ function createSiteScrapClass(className, configIndex) {
             break;
         case "MangaBTT":
             ChildClass = new MangaBTT(configIndex);
+            break;
+        case "Mangakakalot":
+            ChildClass = new MangaKaLotScrap(configIndex);
+            break;
+        case "Mangadex":
+            ChildClass = new MangaDex(configIndex);
             break;
     }
     return ChildClass;

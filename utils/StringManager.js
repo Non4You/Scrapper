@@ -354,7 +354,14 @@ class StringManager {
         // console.log("err ? :", dateStr);
         dateStr = dateStr.trim().replace(/\u00A0/g, "");
         // console.log("err2 ? :", dateStr);
-    
+
+        // Case 0: "current" or "current ?" → now
+        if (/^current\s*\??$/i.test(dateStr)) {
+            return dateType === "int"
+                ? Math.floor(now.getTime() / 1000)
+                : format(now, "d MMMM yyyy", { locale: enUS });
+        }
+        
         // Case 1: "4 hours ago", "14 days ago", "one month ago", "a year ago"
         const relativeMatch = dateStr.match(/(few|\d+|one|a|an) (second|minute|hour|day|month|year)s? ago/);
         if (relativeMatch) {
@@ -391,6 +398,17 @@ class StringManager {
             parsedDate = parse(dateStr, "MM/dd/yyyy", new Date());
         }
     
+        // Case 4: "10-30 22:30" or "02-29 08:03" (assume current year, fallback previous year)
+        if (!isValid(parsedDate)) {
+            const currentYear = now.getFullYear();
+            parsedDate = parse(`${dateStr} ${currentYear}`, "MM-dd HH:mm yyyy", new Date());
+
+            // if invalid (like 02-29 in non-leap year), fallback previous year
+            if (!isValid(parsedDate)) {
+                parsedDate = parse(`${dateStr} ${currentYear - 1}`, "MM-dd HH:mm yyyy", new Date());
+            }
+        }
+
         // Return timestamp if valid
         if (isValid(parsedDate)) {
             parsedDate = addHours(parsedDate, 1);

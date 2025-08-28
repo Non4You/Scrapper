@@ -22,24 +22,33 @@ class MainLogicScrapper {
         await this.mariaDatabase.insertMangaSite(config);     
     }
 
-    async ScrapAll(mode) {
-        console.log(mode);
+    async ScrapAll(mode, scrapper) { // scrapper = [Asura Toon, MangaBTT, LHTranslation, Mangakakalot];
+        console.log("args: ", mode, scrapper);
         var scrapInstance;
         await this.initiate();
         const data = await this.mariaDatabase.getMangaSiteData();
         const totalEntry = this.interpreter.getTotalMangaConfig();
 
+
         for (let i = 0; i < totalEntry; i++) {
             for (let y = 0; y < data.length; y++) {
-                if (data[y].Nom === this.interpreter.getNbSiteNameConfig(i)) {
+                if (data[y].Nom === this.interpreter.getNbSiteNameConfig(i) && scrapper === undefined) {
                     scrapInstance = createSiteScrapClass(data[y].Nom, i);
-                    if (scrapInstance != null)
+                    if (scrapInstance != null) {
                         this.scrapperScheduler.registerScrapper(data[y].Nom, scrapInstance, data[y].id, mode);
+                        console.log("Scrapper registered : ", data[y].Nom, data[y].id, mode);
                         // await scrapInstance.launch(data[y].fullScrapped, data[y].id);
+                    }
+                } else if (data[y].Nom === this.interpreter.getNbSiteNameConfig(i) && data[y].Nom === scrapper) {
+                    scrapInstance = createSiteScrapClass(data[y].Nom, i);
+                    if (scrapInstance != null) {
+                        this.scrapperScheduler.registerScrapper(data[y].Nom, scrapInstance, data[y].id, mode);
+                        console.log("Scrapper registered : ", data[y].Nom, data[y].id, mode);
+                    }
                 }
             }
         }
-        await this.scrapperScheduler.runScrapper((mode !== undefined)?60000:1800000);
+        await this.scrapperScheduler.runScrapper((mode !== undefined || mode === "")? 60000: 1800000);
     }
 }
 

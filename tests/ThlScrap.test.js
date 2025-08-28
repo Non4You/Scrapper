@@ -73,10 +73,11 @@ describe("THLTranslation Class", () => {
             [mangaInfoSources, mangaGenreSources, mangaChaptersSources] = await basicActionBrowser.gatherMangaDataUnlockChapters(asuraScrap.mangaPageInfo,
                 asuraScrap.mangaGenreInfo, asuraScrap.mangaChaptersInfo, asuraScrap.mangaChaptersButton, asuraScrap.mangaChaptersType);
         }
+        console.log("variables: ",mangaInfoSources, mangaGenreSources, mangaChaptersSources, parseFloat(mangaInfoSources[0][2]), parseFloat(mangaInfoSources[0][2]));
         expect(mangaInfoSources[0][0]).not.toBe("");
         expect(mangaInfoSources[0][1]).not.toBe("");
-        expect(parseFloat(asuraScrap.extractNumber(mangaInfoSources[0][2]))).toBeGreaterThan(0);
-        expect(parseFloat(asuraScrap.extractNumber(mangaInfoSources[0][2]))).toBeLessThan(10);
+        expect(parseFloat(parseFloat(mangaInfoSources[0][2]))).toBeGreaterThan(0);
+        expect(parseFloat(parseFloat(mangaInfoSources[0][2]))).toBeLessThan(10);
         expect(mangaInfoSources[0][3]).not.toBe("");
         expect(mangaInfoSources[0][4]).not.toBe("");
         expect(mangaGenreSources.length).not.toBe(0);

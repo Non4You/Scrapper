@@ -6,5 +6,5 @@ const MainLogicScrapper = require('./Scrapper/MainLogicScrapper.js');
 (async () => {
     console.log(process.argv, process.argv.slice(2));
     const mainLogicScrapper = new MainLogicScrapper();
-    await mainLogicScrapper.ScrapAll(process.argv.slice(2)[0]);
+    await mainLogicScrapper.ScrapAll(process.argv.slice(2)[0], process.argv.slice(2)[1]);
 })();

@@ -73,7 +73,7 @@ describe("AsuraScrap Class", () => {
             [mangaInfoSources, mangaGenreSources, mangaChaptersSources] = await basicActionBrowser.gatherMangaDataUnlockChapters(asuraScrap.mangaPageInfo,
                 asuraScrap.mangaGenreInfo, [asuraScrap.mangaChaptersLink, asuraScrap.mangaChaptersName, asuraScrap.mangaChaptersDate], asuraScrap.mangaChaptersButton, asuraScrap.mangaChaptersType);
         }
-        // console.log("variables: ",mangaInfoSources, mangaGenreSources, mangaChaptersSources);
+        console.log("variables: ",mangaInfoSources, mangaGenreSources, mangaChaptersSources);
         expect(mangaInfoSources[0][0]).not.toBe("");
         expect(mangaInfoSources[0][1]).not.toBe("");
         expect(parseFloat(mangaInfoSources[0][2])).toBeGreaterThan(0);
@@ -102,7 +102,7 @@ describe("AsuraScrap Class", () => {
     test("test Asura check manga chapter images", async () => {
         await basicActionBrowser.accessPage(asuraScrap.mainUrl);
         var allMangaSources = await headLessBrowser.getDataEvaluateLoop(asuraScrap.mangaInfo[0], asuraScrap.mangaInfo[1]);
-        await basicActionBrowser.accessPage(allMangaSources[0][1]);
+        await basicActionBrowser.accessPage(allMangaSources[3][1]);
         if (asuraScrap.mangaChaptersGatheringMethod === 1) {
             [mangaInfoSources, mangaGenreSources, mangaChaptersSources] = await basicActionBrowser.gatherMangaDataChunk(asuraScrap.mangaPageInfo,
                 asuraScrap.mangaGenreInfo, asuraScrap.mangaChaptersInfo, asuraScrap.mangaChaptersType);

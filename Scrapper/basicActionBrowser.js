@@ -30,12 +30,28 @@ class BasicActionBrowser {
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
             }
         }
-        // console.log("access url: " + page);
-        // var response = await this.headLessBrowser.goToPage(page);
-        // await this.wait(1000);
-        // if (response.status() >= 400)
-        //     throw new Error("Access to Website on " + page + " denied Error " + response.status());
-        // return (response.status());
+    }
+
+    async accessPageWithIdle(page, maxRetries = 3, retryDelay = 1000) {
+        let attempts = 0;
+    
+        while (attempts < maxRetries) {
+            try {
+                var response = await this.headLessBrowser.goToPagewithIdle(page);
+                await this.wait(2000);
+                if (response.status() >= 400)
+                    throw new Error("Access to Website on " + page + " denied Error " + response.status());
+                return (response.status());
+            } catch (error) {
+                attempts++;
+                console.error(`Erreur lors du chargement de la page : ${error.message}. Tentative ${attempts}/${maxRetries}`);
+                
+                if (attempts >= maxRetries) {
+                    throw new Error(`Impossible de charger la page après ${maxRetries} tentatives : ${url}`);
+                }
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+            }
+        }
     }
 
     // async checkIcon(siteId, iconInfo) {
@@ -77,8 +93,9 @@ class BasicActionBrowser {
             } catch (error) {
                 console.log("Listing manga error: ", error)
             }
-	    await this.wait(2000);
+	        await this.wait(2000);
             retries--;
+            console.log(retries > 0, allMangaSources.length === 0);
         } while (retries > 0 && allMangaSources.length === 0)
         if (allMangaSources.length === 0 && runCheck)
             throw new Error("Error: Listing mangas did not return anything.");
@@ -145,16 +162,15 @@ class BasicActionBrowser {
             try {
                 let currentUrl = this.headLessBrowser.currentUrl();
                 // await this.wait(2000);
-		let res;
-		if (url !== "") {
-		    await this.headLessBrowser.goToPage(url);
-		    res = "OK";
-		} else {
+                let res;
+                if (url !== "") {
+                    await this.headLessBrowser.goToPage(url);
+                    res = "OK";
+                } else {
                     res = await this.headLessBrowser.evaluateAndclickOnSelectorIf(
-			pagination[0], pagination[1], pagination[2], "Next Page Error :"
-                    );
-		}
-		console.log("res click next page : ", res);
+                        pagination[0], pagination[1], pagination[2], "Next Page Error :");
+                }
+                console.log("res click next page : ", res);
 		//await this.headLessBrowser.waitNavig();
                 await this.wait(4000);
                 let newUrl = this.headLessBrowser.currentUrl();
@@ -166,7 +182,7 @@ class BasicActionBrowser {
                 } else if (res === "KO" && ErrorCheck) {
                     throw new Error("Error: Pagination not working properly");
                 } else if (currentUrl !== newUrl) {
-                    return "OK"
+                    return "OK";
                 } else {
                     return res; // Success case
                 }
@@ -190,6 +206,15 @@ class BasicActionBrowser {
         return (res);
     }
 
+    async scrappedChaptersImagesOnPageLoad(chapterData, regex) {
+        await this.headLessBrowser.setDownloadImageOnpage(chapterData.url.match(regex)[1], chapterData.url);
+        await this.accessPage(chapterData.url);
+        await this.headLessBrowser.unsetDownloadImageOnpage();
+        var images = await this.headLessBrowser.getLoadedImages();
+        // console.log("images: ", images, chapterData.url, chapterData.url.match(regex)[1]);
+        return (images);
+    }
+
     async scrappedChaptersImages(chapterData, chapterConf, scrollImagesChapterConf, chapterTypeConf) {
         await this.accessPage(chapterData.url);
         if (scrollImagesChapterConf === true)
@@ -201,7 +226,7 @@ class BasicActionBrowser {
         else if (chapterTypeConf === 2)
             res = await this.headLessBrowser.evaluateAndGetAllValuesOnSelector(chapterConf[0], chapterConf[1], "gathering url chapter image");
         res = res.flatMap(x => x);
-        console.log(res);
+        // console.log(res);
         return (res);
     }
 

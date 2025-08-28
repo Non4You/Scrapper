@@ -1,10 +1,9 @@
-# Use an official Node.js image
+# Use Node.js Linux image
 FROM node:18-bookworm
 
-RUN mkdir -p /app/user_data && chown -R www-data:www-data /app/user_data && chmod -R 775 /app/user_data
-RUN rm -rf /app/Scrapper/user_data/Default/AutofillStrikeDatabase/LOG || true
+# Set working directory
+WORKDIR /app
 
-# Install dependencies including pixman-1 and other libraries required by canvas
 RUN apt-get update && apt-get install -y \
     libcairo2-dev \
     libpango1.0-dev \
@@ -16,31 +15,20 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     chromium \
-    libpixman-1-dev \
-    libnode-dev
+    libpixman-1-dev
 
-# Set environment variables for pkg-config and Puppeteer
-ENV PKG_CONFIG_PATH="/usr/lib/pkgconfig:/usr/share/pkgconfig"
-ENV PUPPETEER_EXECUTABLE_PATH="/usr/bin/chromium"
-
-ENV DB_HOST=${DB_HOST}
-ENV DB_USER=${DB_USER}
-ENV DB_PASSWORD=${DB_PASSWORD}
-ENV DB_DATABASE=${DB_DATABASE}
-
-# Set the working directory
-WORKDIR /app
-
-# Copy package.json and install dependencies
-COPY package.json package-lock.json ./
-
-RUN rm -rf node_modules && npm cache clean --force
-RUN npm install --unsafe-perm
-
-RUN npm rebuild canvas
-
-# Copy the rest of the app
 COPY . .
 
-# Run the Puppeteer script
-CMD ["node", "main.js"]
+# Copy package.json first to leverage cache
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm install --unsafe-perm
+
+# Rebuild canvas for Linux
+RUN npm rebuild canvas --build-from-source
+
+# Copy the rest of the app
+
+# Default command (kept alive for dev)
+CMD ["/bin/bash"]

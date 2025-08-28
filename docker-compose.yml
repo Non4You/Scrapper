@@ -1,0 +1,81 @@
+services:
+  scraper-asura-info:
+    build: .
+    container_name: scraper-asura-info
+    command: node main.js info "Asura Toon"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=Daboudu91009!
+      - DB_DATABASE=kuroneko
+    restart: unless-stopped
+  scraper-asura-chapters:
+    build: .
+    container_name: scraper-asura-chapters
+    command: node main.js chapters "Asura Toon"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=Daboudu91009!
+      - DB_DATABASE=kuroneko
+    restart: unless-stopped
+  scraper-btt-info:
+    build: .
+    container_name: scraper-btt-info
+    command: node main.js info "MangaBTT"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=Daboudu91009!
+      - DB_DATABASE=kuroneko
+    restart: unless-stopped
+  scraper-btt-chapters:
+    build: .
+    container_name: scraper-btt-chapters
+    command: node main.js chapters "MangaBTT"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=Daboudu91009!
+      - DB_DATABASE=kuroneko
+    restart: unless-stopped
+  scraper-lht-info:
+    build: .
+    container_name: scraper-lht-info
+    command: node main.js info "LHTranslation"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=Daboudu91009!
+      - DB_DATABASE=kuroneko
+    restart: unless-stopped
+  scraper-lht-chapters:
+    build: .
+    container_name: scraper-lht-chapters
+    command: node main.js chapters "LHTranslation"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=Daboudu91009!
+      - DB_DATABASE=kuroneko
+    restart: unless-stopped
+  scraper-mangakakalot-info:
+    build: .
+    container_name: scraper-mangakakalot-info
+    command: node main.js info "Mangakakalot"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=Daboudu91009!
+      - DB_DATABASE=kuroneko
+    restart: unless-stopped
+  scraper-mangakakalot-chapters:
+    build: .
+    container_name: scraper-mangakakalot-chapters
+    command: node main.js chapters "Mangakakalot"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_USER=root
+      - DB_PASSWORD=Daboudu91009!
+      - DB_DATABASE=kuroneko
+    restart: unless-stopped

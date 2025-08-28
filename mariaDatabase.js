@@ -2,19 +2,19 @@ const mysql = require('mysql2/promise');
 const stringManager = require("./utils/StringManager");
 
 // Database configuration
-// const dbConfig = {
-//     host: 'localhost',
-//     user: 'root',
-//     password: 'Daboudu91009!',
-//     database: 'importtest'
-// };
-
 const dbConfig = {
-    host: process.env.DB_HOST || '192.168.1.99',
+    host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'daboudu91009',
-    database: process.env.DB_DATABASE || 'KuroNeko'
+    password: process.env.DB_PASSWORD || 'Daboudu91009!',
+    database: process.env.DB_DATABASE || 'kuroneko'
 };
+
+// const dbConfig = {
+//     host: process.env.DB_HOST || '192.168.1.99',
+//     user: process.env.DB_USER || 'root',
+//     password: process.env.DB_PASSWORD || 'daboudu91009',
+//     database: process.env.DB_DATABASE || 'KuroNeko'
+// };
 
 class MariaDatabase {
     constructor() {
@@ -175,12 +175,12 @@ class MariaDatabase {
         // console.log("undefined error test: ", mangaId, synopsis, notation, status);
         // console.log("result: ",results)
         if (results.length === 0) {
-            const [res, ] = await this.connection.query(insertQ, [mangaId, synopsis, notation, status]);
+            const [res, ] = await this.connection.query(insertQ, [mangaId, synopsis, notation === null?0:notation, status]);
             // console.log("insert res: ",res)
             return (res.insertId);
         }
         if (results[0].status !== status || results[0].image_stored === "KO") {
-            const [res, ] = await this.connection.query(updateQ, [status,synopsis,notation,results[0].id]);
+            const [res, ] = await this.connection.query(updateQ, [status,synopsis,notation === null?0:notation,results[0].id]);
             console.log("Update: ", res);
         }
     }
@@ -300,6 +300,7 @@ class MariaDatabase {
             // console.log("save manga ref genre");
             await this.saveMangaRefGenre(this.stringCleaner.cleanString(mangaInfo[1]), mangaGenre);
             await this.updateUserRemainingChapterManga(mangaId, siteId, added);
+            // console.log("save manga ref status: ", mangaInfo, mangaGenre, mangaChapters);
             await this.saveMangaRefStatus(this.stringCleaner.cleanString(mangaInfo[1]));
             if (res === 0) await this.updateNoteMangaRef(this.stringCleaner.cleanString(mangaInfo[1]), mangaInfo[3]);
             // console.log("save end");
@@ -404,7 +405,8 @@ class MariaDatabase {
             "INNER JOIN manga_info mi ON mi.manga_id = mrl.manga_id " +
             "WHERE mr.nom = ? GROUP BY mi.`status` ORDER BY count_status DESC LIMIT 1";
         var statusR = await this.connection.query(sq, [mangaName]);
-        if (statusR) {
+        // console.log("statusR: ", statusR);
+        if (statusR[0].length > 0 && statusR[0][0].status !== null) {
             var uq = "UPDATE manga_ref mr SET mr.`status` = ? WHERE mr.nom = ?;";
             await this.connection.query(uq, [statusR[0][0].status, mangaName]);
         }
@@ -415,7 +417,7 @@ class MariaDatabase {
         var manga = await this.connection.query(sMangaQ, [mangaName]);
         var uMangaQ = "UPDATE manga_ref mr SET note = ?, total_note = ? WHERE mr.nom = ?;";
         const totalNote = manga[0].total_note === null || isNaN(manga[0].total_note) ? 1 : Number(manga[0].total_note) + 1
-        await this.connection.query(uMangaQ, [note, totalNote, mangaName]);
+        await this.connection.query(uMangaQ, [note === null?0:note, totalNote === null?0:totalNote, mangaName]);
     }
 
     async updateUserRemainingChapterManga(mangaId, siteId, chapterAdded) {

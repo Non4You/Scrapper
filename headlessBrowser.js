@@ -4,6 +4,9 @@ puppeteer.use(StealthPlugin());
 const fs = require('fs');
 const path = require('path');
 
+var targetImageDomain;
+var loadedImages = [];
+
 class HeadLessBrowser {
     constructor() {
         if (HeadLessBrowser.instance) {
@@ -12,33 +15,80 @@ class HeadLessBrowser {
         HeadLessBrowser.instance = this;    // Save the instance
     }
 
+    isDocker() {
+        try {
+          // common check: Docker creates /.dockerenv
+          return fs.existsSync('/.dockerenv');
+        } catch {
+          return false;
+        }
+    }
+
     async launchBrowser() {
         const userDataDir = path.join(__dirname, "user_data");
-	//process.env.PUPPETEER_EXECUTABLE_PATH
-        this.browser = await puppeteer.launch({ headless: true, userDataDir: userDataDir, 
-            // executablePath: "/usr/bin/chromium", 
-            args: [    
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-software-rasterizer',
-            '--disable-extensions',
-            '--disable-gpu',
-            '--disable-background-timer-throttling',
-            '--disable-client-side-phishing-detection',
-            '--disable-sync',
-			'--disable-translate',
-			'--disable-3d-apis',
-			'--disable-remote-fonts',
-			'--disable-ipc-flooding-protection',
-			'--disable-backgrounding-occluded-windows',
-			'--disable-background-networking',
-			'--disable-renderer-backgrounding',
-			'--disable-default-apps',
-			'--no-first-run',
-			//'--blink-settings=imagesEnabled=false',
-            '--disk-cache-size=0'
-            ], protocolTimeout: 180000 })
+	    //process.env.PUPPETEER_EXECUTABLE_PATH
+        // this.browser = await puppeteer.launch({ headless: true, userDataDir: userDataDir, 
+        //     // executablePath: "/usr/bin/chromium", 
+        //     args: [    
+        //     '--no-sandbox',
+        //     '--disable-setuid-sandbox',
+        //     '--disable-dev-shm-usage',
+        //     '--disable-software-rasterizer',
+        //     '--disable-extensions',
+        //     '--disable-gpu',
+        //     '--disable-background-timer-throttling',
+        //     '--disable-client-side-phishing-detection',
+        //     '--disable-sync',
+		// 	'--disable-translate',
+		// 	'--disable-3d-apis',
+		// 	'--disable-remote-fonts',
+		// 	'--disable-ipc-flooding-protection',
+		// 	'--disable-backgrounding-occluded-windows',
+		// 	'--disable-background-networking',
+		// 	'--disable-renderer-backgrounding',
+		// 	'--disable-default-apps',
+		// 	'--no-first-run',
+		// 	//'--blink-settings=imagesEnabled=false',
+        //     '--disk-cache-size=0'
+        //     ],
+        //     executablePath: '/usr/bin/chromium', // add this line for docker -- fixed
+        //     protocolTimeout: 180000 })
+
+          
+        const launchOptions = {
+            headless: true,
+            userDataDir: userDataDir,
+            args: [
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--disable-dev-shm-usage',
+              '--disable-software-rasterizer',
+              '--disable-extensions',
+              '--disable-gpu',
+              '--disable-background-timer-throttling',
+              '--disable-client-side-phishing-detection',
+              '--disable-sync',
+              '--disable-translate',
+              '--disable-3d-apis',
+              '--disable-remote-fonts',
+              '--disable-ipc-flooding-protection',
+              '--disable-backgrounding-occluded-windows',
+              '--disable-background-networking',
+              '--disable-renderer-backgrounding',
+              '--disable-default-apps',
+              '--no-first-run',
+              //'--blink-settings=imagesEnabled=false',
+              '--disk-cache-size=0'
+            ],
+            protocolTimeout: 180000
+        };
+          
+          // ✅ Only set chromium path when inside Docker
+        if (this.isDocker()) {
+            launchOptions.executablePath = '/usr/bin/chromium';
+        }
+          
+        this.browser = await puppeteer.launch(launchOptions);
         const pages = await this.browser.pages();
         this.page = pages[pages.length - 1];
 	//await this.page.goto('https://google.com', { waitUntil: 'load' });
@@ -78,9 +128,9 @@ class HeadLessBrowser {
     }
 
     async justclick() {
-	await this.page.evaluate(() => {
-            document.querySelector('li.next > a')?.click()
-	});
+        await this.page.evaluate(() => {
+                document.querySelector('li.next > a')?.click()
+        });
     }
 
     async justclick2() {
@@ -113,7 +163,26 @@ class HeadLessBrowser {
                 return res; // Succès, retourner la réponse
             } catch (error) {
                 attempts++;
-                console.error(`Erreur lors du chargement de la page : ${error.message}. Tentative ${attempts}/${maxRetries}`);
+                // console.error(`Erreur lors du chargement de la page : ${error.message}. Tentative ${attempts}/${maxRetries}`);
+                
+                if (attempts >= maxRetries) {
+                    throw new Error(`Impossible de charger la page après ${maxRetries} tentatives : ${url}`);
+                }
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+            }
+        }
+    }
+
+    async goToPageWithIdle(url, maxRetries = 3, retryDelay = 1000) {
+        let attempts = 0;
+    
+        while (attempts < maxRetries) {
+            try {
+                const res = await this.page.goto(url, { waitUntil: 'networkidle2' });
+                return res; // Succès, retourner la réponse
+            } catch (error) {
+                attempts++;
+                // console.error(`Erreur lors du chargement de la page : ${error.message}. Tentative ${attempts}/${maxRetries}`);
                 
                 if (attempts >= maxRetries) {
                     throw new Error(`Impossible de charger la page après ${maxRetries} tentatives : ${url}`);
@@ -172,24 +241,36 @@ class HeadLessBrowser {
         });
     }
 
+    async sanityCheck() {
+        const summary = await this.page.evaluate(() => {
+            const el = document.querySelector("#contentBox");
+            return el ? el.textContent.trim() : null;
+          });
+          
+          console.log("✅ Extracted summary:", summary);          
+    }
+
+
     async getDataEvaluateLoop(selectorsSearchTab, indexSelectorAttributeTab, errorMessage) {
         try {
-            // await this.page.waitForSelector(selectorsSearchTab[0], {timeout: 1000});
+            // console.log("Waiting for selector:", indexSelectorAttributeTab[1][0][1], 
+            //     await this.page.waitForSelector(indexSelectorAttributeTab[1][0][1], {timeout: 1000}));
             var res = await this.page.evaluate((selectorsSearchTab, indexSelectorAttributeTab) => {
                 function querySelectorTabOrString(doc, value) {
                     if (Array.isArray(value)) {
                         if (value[0] === -1) {
-    
+                            console.log("querySelectorTabOrString:", doc, value);
+                            return null;
                         } else {
                             var docs = Array.from(doc.querySelectorAll(value[1]));
-                            return (docs[value[0]]);
+                            return docs[value[0]] || null;
                         }
                     } else if (typeof value === 'string') {
                         var docs = Array.from(doc.querySelectorAll(value));
-                        return (docs[0]);
+                        return docs[0] || null;
                     }
-                    return false; 
-                }
+                    return null;
+                } 
                 let links = Array.isArray(selectorsSearchTab[0]) ? 
                     Array.from(document.querySelectorAll(selectorsSearchTab[0][1])) : 
                     Array.from(document.querySelectorAll(selectorsSearchTab[0]));
@@ -202,38 +283,107 @@ class HeadLessBrowser {
                         links = Array.isArray(selector) ? links[selector[0]] : links[0];
                     }
                 });
-                data = [];
+    
+                let data = [];
                 for (let i = 0; i < links.length; i++) {
-                    list = [];
+                    let list = [];
                     for (let y = 0; y < indexSelectorAttributeTab.length; y++) {
                         if (indexSelectorAttributeTab[y] === null) {
                             list.push(null);
                         } else {
-                            var elem = querySelectorTabOrString(links[i], indexSelectorAttributeTab[y][0]);
-                            for (let x = 1; x < indexSelectorAttributeTab[y].length-1; x++) {
+                            let elem = querySelectorTabOrString(links[i], indexSelectorAttributeTab[y][0]);
+                            for (let x = 1; x < indexSelectorAttributeTab[y].length - 1; x++) {
                                 elem = querySelectorTabOrString(elem, indexSelectorAttributeTab[y][x]);
-                                console.log("2 - next:", elem);
                             }
-                            list.push(elem[indexSelectorAttributeTab[y][indexSelectorAttributeTab[y].length-1]]);
+                            if (elem) {
+                                if (indexSelectorAttributeTab[y][indexSelectorAttributeTab[y].length - 1] === "default-stars") {
+                                    list.push(elem.getAttribute("default-stars") || null);
+                                } else {
+                                    list.push(elem[indexSelectorAttributeTab[y][indexSelectorAttributeTab[y].length - 1]] || null);
+                                }
+                            } else {
+                                list.push(null);
+                            }
                         }
-
-                        // console.log(elem);
                     }
-                    data.push(list);             
+                    data.push(list);
                 }
-                console.log("data: ", data);
-                return (data);
+                return data;
             }, selectorsSearchTab, indexSelectorAttributeTab);
-            return (res);
+            return res;
         } catch (error) {
-            if (errorMessage === undefined)
-                console.log("Error: ", error.message);
-            else
-                console.log("Error: ", errorMessage, ", js msg:", error.message);
-            
-            return ([]);
+            console.log("Error:", errorMessage || "", error.message);
+            return [];
         }
     }
+    // async getDataEvaluateLoop(selectorsSearchTab, indexSelectorAttributeTab, errorMessage) {
+    //     try {
+    //         await this.page.waitForSelector(selectorsSearchTab[0], {timeout: 1000});
+    //         var res = await this.page.evaluate((selectorsSearchTab, indexSelectorAttributeTab) => {
+    //             function querySelectorTabOrString(doc, value) {
+    //                 if (Array.isArray(value)) {
+    //                     if (value[0] === -1) {
+    //                         return null;
+    //                     } else {
+    //                         var docs = Array.from(doc.querySelectorAll(value[1]));
+    //                         return (docs[value[0]]);
+    //                     }
+    //                 } else if (typeof value === 'string') {
+    //                     var docs = Array.from(doc.querySelectorAll(value));
+    //                     return (docs[0]);    
+    //                 }
+    //                 return false; 
+    //             }
+    //             let links = Array.isArray(selectorsSearchTab[0]) ? 
+    //                 Array.from(document.querySelectorAll(selectorsSearchTab[0][1])) : 
+    //                 Array.from(document.querySelectorAll(selectorsSearchTab[0]));
+    //             if (selectorsSearchTab.length > 1) {
+    //                 links = Array.isArray(selectorsSearchTab[0]) ? links[selectorsSearchTab[0][0]] : links[0];
+    //             }
+    //             selectorsSearchTab.slice(1).forEach((selector, i) => {
+    //                 links = Array.from(links.querySelectorAll(Array.isArray(selector) ? selector[1] : selector));
+    //                 if (i < selectorsSearchTab.length - 2) {
+    //                     links = Array.isArray(selector) ? links[selector[0]] : links[0];
+    //                 }
+    //             });
+    //             data = [];
+    //             for (let i = 0; i < links.length; i++) {
+    //                 list = [];
+    //                 for (let y = 0; y < indexSelectorAttributeTab.length; y++) {
+    //                     if (indexSelectorAttributeTab[y] === null) {
+    //                         list.push(null);
+    //                     } else {
+    //                         var elem = querySelectorTabOrString(links[i], indexSelectorAttributeTab[y][0]);
+    //                         for (let x = 1; x < indexSelectorAttributeTab[y].length-1; x++) {
+    //                             elem = querySelectorTabOrString(elem, indexSelectorAttributeTab[y][x]);
+    //                             // console.log("2 - next:", elem);
+    //                         }
+    //                         if (indexSelectorAttributeTab[y][indexSelectorAttributeTab[y].length-1] === "default-stars") {
+    //                             list.push(elem ? elem.getAttribute("default-stars") : null);
+    //                         } else {
+    //                             list.push(elem[indexSelectorAttributeTab[y][indexSelectorAttributeTab[y].length-1]]);
+    //                         }
+                            
+    //                     }
+
+    //                     // console.log(elem);
+    //                 }
+    //                 data.push(list);             
+    //             }
+    //             // console.log("data: ", data);
+    //             return (data);
+    //         }, selectorsSearchTab, indexSelectorAttributeTab);
+    //         // console.log("data: ", res, indexSelectorAttributeTab);
+    //         return (res);
+    //     } catch (error) {
+    //         if (errorMessage === undefined)
+    //             console.log(selectorsSearchTab, indexSelectorAttributeTab, "Error: ", error.message);
+    //         else
+    //             console.log("Error: ", errorMessage, ", js msg:", error.message);
+            
+    //         return ([]);
+    //     }
+    // }
 
     async evaluateAndGetAllValuesOnSelector(selectors, attribute, errorMessage) {
         try {
@@ -258,7 +408,7 @@ class HeadLessBrowser {
                 for (let i = 0; i < links.length; i++) {
                     data.push(links[i][attribute]);
                 }
-                console.log(data);
+                // console.log(data);
                 return (data);
             }, selectors, attribute);
             return (res);
@@ -275,11 +425,11 @@ class HeadLessBrowser {
         try {
             var res = await this.page.evaluate((selector, attribute, attributeValue) => {
                 const links = Array.from(document.querySelectorAll(selector));
-                console.log(links, selector);
+                // console.log(links, selector);
                 for (let i = 0; i < links.length; i++) {
                     if (links[i][attribute].includes(attributeValue)) {
                         links[i].click();
-			console.log("clicked", );
+			            // console.log("clicked", );
                         return ("OK");
                     }
                 }
@@ -298,10 +448,10 @@ class HeadLessBrowser {
     async evaluatePage() {
         await this.page.evaluate(() => {
             const links = Array.from(document.querySelectorAll('span'));
-            console.log("3", links);
+            // console.log("3", links);
             for (let i = 0; i < links.length; i++) {
                 if (links[i]["textContent"] === "AGREE") {
-                    console.log("WORKED");
+                    // console.log("WORKED");
                     links[i].click();
                 }
                 
@@ -310,6 +460,60 @@ class HeadLessBrowser {
             //     link.click();
             // }
         });
+    }
+
+    saveImage(filename, buffer) {
+        fs.writeFileSync(filename, buffer);
+    }
+
+    async captureImageAsBuffer(response) {
+        try {
+            const url = response.url();
+            // Only capture the specific image
+            if (url.includes(targetImageDomain) && url.endsWith('.webp')) {
+                // console.log('Intercepted image URL:', url);
+        
+                const buffer = await response.buffer();
+                const filename = path.basename(url.split('?')[0]);
+                loadedImages.push([url, buffer]);
+        
+                // fs.writeFileSync(filename, buffer);
+                // console.log(`✅ Saved image as ${filename}, length: ${loadedImages.length}, buffer: ${loadedImages[0]}`);
+            }
+        } catch (err) {
+            console.log(1);
+        //   console.error('Error saving image:', err);
+        }
+    }
+
+    async setDownloadImageOnpage(imageUrl) {
+        targetImageDomain = imageUrl;
+        const pages = await this.browser.pages();
+        pages[0].on('response', this.captureImageAsBuffer);
+    }
+    
+    async unsetDownloadImageOnpage() {
+        targetImageDomain = "";
+        const pages = await this.browser.pages();
+        pages[0].off('response', this.captureImageAsBuffer);
+    }
+
+    async downloadImageFromPage(imageUrl, siteUrl) {
+        const page = await this.browser.newPage();
+        targetImageDomain = imageUrl;
+
+        page.on('response', this.captureImageAsBuffer);
+        await page.goto(siteUrl, { //'https://www.mangakakalot.gg/manga/reincarnated-as-a-sword'
+          waitUntil: 'networkidle2',
+        });
+      
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    getLoadedImages() {
+        const images = [...loadedImages];
+        loadedImages.length = 0;
+        return images;
     }
 
     async closeBrowser() {

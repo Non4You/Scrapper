@@ -36,6 +36,9 @@ class AbstractSiteScrap {
     }
 
     extractNumber(str) {
+        if (typeof str !== 'string') {
+            return 0;
+        }
         const match = str.match(/\(([\d.]+)\)/);
         return match ? parseFloat(match[1]) : 0;
     }
@@ -79,7 +82,7 @@ class AbstractSiteScrap {
             }
             await this.headLessBrowser.goBack();
             nbMangaUpdated = this.update(added, updated, nbMangaUpdated);
-            if (isFullscrapped && nbMangaUpdated === 4)
+            if (isFullscrapped && nbMangaUpdated === 5)
                 return ([mangaInfoSources, mangaGenreSources, true]);
         }
         return ([mangaInfoSources, mangaGenreSources, false]);
@@ -159,41 +162,76 @@ class AbstractSiteScrap {
         }
     }
 
-    async reduceImageQualityAndSave(imageUrl, type, errOnbuffer = true, quality = 80) {
+    async reduceImageQualityAndSaveFromBuffer(buffer, errOnbuffer = true, quality = 80) {
         try {
-            console.log("9");
-            const response = await fetch(imageUrl);
-            if (errOnbuffer === false && (response === undefined || response === null))
-                return ("");
-            if (!response.ok) throw new Error(`Failed to fetch image. Status: ${response.status}`);
-            if (type === 'ico') {
-                return (response.buffer());
-            } else {
-                // console.log("1");
-                console.log("8", response);
-                const responseBuffer = await response.buffer();
-                console.log("7", responseBuffer);
-                const buffer = await Promise.race([
-                    responseBuffer,
-                    new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error("BUFFER_TIMEOUT")), 5000)
-                    )
-                ]);            
-                // console.log("2");
-                const imageBuffer = await sharp(buffer)
-                    .jpeg({ quality })
-                    .toBuffer();
-                // console.log("3");
-                return (imageBuffer);
-            }
+            const imageBuffer = await sharp(buffer)
+                .jpeg({ quality })
+                .toBuffer();
+            return (imageBuffer);
         } catch (error) {
-            console.log("error message is:", err.message);
+            console.log("error message is:", err.message, " and buffer is :", buffer);
+            if (errOnbuffer === false)
+                return ("");
             if (err.message === "BUFFER_TIMEOUT") {
                 console.warn("Buffer timed out.");
                 return ""; // retourne une chaîne vide seulement si le buffer a expiré
             }
         }
-        console.log("6");
+    }
+
+    async svgBufferToPng(svgBuffer) {
+        const pngBuffer = await sharp(svgBuffer)
+            .png()
+            .toBuffer();
+        fs.writeFileSync("out.png", pngBuffer);
+        return pngBuffer;
+    }
+
+    async reduceImageQualityAndSave(imageUrl, type, errOnbuffer = true, quality = 80) {
+        try {
+            // console.log("9", imageUrl);
+            const response = await fetch(imageUrl);
+            // console.log("10", response, errOnbuffer === false && (response === undefined || response === null));
+            if (errOnbuffer === false && (response === undefined || response === null)) return ("");
+            if (!response.ok) throw new Error(`Failed to fetch image. Status: ${response.status}`);
+            if (type === 'ico') {
+                const imageBuffer = await response.buffer();
+                await fs.promises.writeFile("test.png", imageBuffer);
+                return (imageBuffer);
+            } else if (type === 'svg') {
+                return (await this.svgBufferToPng(await response.buffer()));
+            } else {
+                // console.log("1");
+                // console.log("8", response);
+                const responseBuffer = await response.buffer();
+                if (responseBuffer.byteLength === 0) {
+                    return ("");
+                }
+                // console.log("7", responseBuffer);
+                const buffer = await Promise.race([
+                    responseBuffer,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("BUFFER_TIMEOUT")), 5000))
+                ]);            
+                // console.log("2", buffer.length);
+                if (buffer.length === 0) return ("");
+                const imageBuffer = await sharp(buffer)
+                    .jpeg({ quality })
+                    .toBuffer();
+                // console.log("3");
+                await fs.promises.writeFile("test.svg", imageBuffer);
+                console.log(`✅ Image saved at ${outputPath}`);
+                return (imageBuffer);
+            }
+        } catch (error) {
+            console.log("error message is:", err.message);
+            if (errOnbuffer === false)
+                return ("");
+            if (err.message === "BUFFER_TIMEOUT") {
+                console.warn("Buffer timed out.");
+                return ""; // retourne une chaîne vide seulement si le buffer a expiré
+            }
+        }
+        // console.log("6");
     }
 
     async saveIcon(siteId) {
@@ -205,17 +243,18 @@ class AbstractSiteScrap {
         var isFullscrapped = await this.mariaDatabase.getIsFullscrapped(siteId);
         console.log("Is Fullscrapped = ", isFullscrapped);
         try {
-            if (mode === undefined) {
+            if (mode === undefined || mode === "all" || mode === "info") {
                 if (isFullscrapped === 0) {
                     var isOk = await this.accessMainPage(siteId, false);
                     if (isOk) await this.mariaDatabase.setFullScrappedOnMangaSite(siteId);
                 } else if (isFullscrapped === 1) {
                     await this.accessMainPage(siteId, true);
                 }
-            } else {          
+            } 
+            if (mode === "all" || mode === "chapters") {          
                 var chapters = await this.mariaDatabase.getChapterToScrap(siteId);
                 if (chapters.length != 0) {
-                    console.log("chapters to Scrap: ", chapters, chapters[0].scrapped, chapters[0].scrapped === 1);
+                    // console.log("chapters to Scrap: ", chapters, chapters[0].scrapped, chapters[0].scrapped === 1);
                     for (let i = 0; i < chapters.length; i++) {
                         try {
                             var urls = await this.basicActionBrowser.scrappedChaptersImages(chapters[i], this.imagesChapter, this.scrollImagesChapter, this.imagesChapterType);

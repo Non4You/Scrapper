@@ -3,9 +3,9 @@ const AbstractSiteScrap = require("./AbstractSiteScrap.js");
 class MangaBTTScrap extends AbstractSiteScrap {
     constructor(configIndex) {
         super(configIndex);
-	this.urlPagination1 = "https://manhwabtt.cc/?page=";
-	this.currentPage = 2;
-	this.urlPagination2 = "&typegroup=0"; 
+        this.urlPagination1 = "https://manhwabtt.cc/?page=";
+        this.currentPage = 1;
+        this.urlPagination2 = "&typegroup=0"; 
     }
 
     async mangaScrap(siteId, runCheck, isFullscrapped, index, totalRetries = 3) {
@@ -32,14 +32,14 @@ class MangaBTTScrap extends AbstractSiteScrap {
                             );
                     }
                     mangaInfoSources[0][2] = 5;
-                    console.log("1");
+                    // console.log("1");
                     mangaInfoSources[0][4] = await this.reduceImageQualityAndSave(mangaInfoSources[0][4], "", false);
-                    console.log("2:", mangaInfoSources[0][4]);
+                    // console.log("2:", mangaInfoSources[0][4]);
                     var [added, updated] = await this.mariaDatabase.saveAllData(
                         siteId, [allMangaSources[i][1], ...mangaInfoSources[0]],
                         mangaGenreSources, (this.mangaChaptersOrder === 1) ? mangaChaptersSources.reverse() : mangaChaptersSources
                     );
-                    console.log("3");
+                    // console.log("3");
                     retries = 0;
                     break;
                 } catch (error) {
@@ -60,7 +60,7 @@ class MangaBTTScrap extends AbstractSiteScrap {
             }
             await this.headLessBrowser.goBack();
             nbMangaUpdated = this.update(added, updated, nbMangaUpdated);
-            if (isFullscrapped && nbMangaUpdated === 18) {
+            if (isFullscrapped && nbMangaUpdated === 10) {
                 return [mangaInfoSources, mangaGenreSources, true];
             }
         }
